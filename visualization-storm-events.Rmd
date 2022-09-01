@@ -1,0 +1,132 @@
+---
+title: "Week 4 homework assignment"
+author: Student Name
+date: Due Date
+output: github_document
+editor_options:
+  chunk_output_type: inline
+---
+
+## DSI-EDA
+## Professor Cassy Dorff
+
+### The Data
+
+The National Oceanic and Atmospheric Administration (NOAA) produces many datasets on climate, ocean science, and atmospheric science. If you have ever watched a US weather report, you will have seen NOAA data!
+In this homework, we will investigate NOAA's Storm Events dataset. This is a collection of data on the details of storm events such as tornados, heat waves, and floods for each year -- going back to the 1950s! The dataset we will be using is for the year 2020. Download that data through this link: https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2020_c20220816.csv.gz (note: the data will download as a .gz file - you will need to unzip/extract the file to access the data).
+
+The data dictionary can be accessed here: https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/Storm-Data-Bulk-csv-Format.pdf
+If you are interested in other years, feel free to check them out on this web-accessible folder (WAF): https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/ 
+
+```{r}
+# Libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(stringr)
+```
+
+### Data Exploration
+
+The Storms Events dataset includes information on the type of storm, storm severity, the location, time of day, and even effects of the storm such as deaths, injuries, and damage costs. Let's explore this a bit further.
+
+First, create a bar plot that shows the deadliest types of storms (the event types with the most direct/indirect deaths - note there are two columns for deaths information). Which storm has the most deaths associated with it? 
+
+What conclusions can you draw from this plot? How might it be misleading?
+
+```{r}
+# storm event data
+storms <- read_csv("StormEvents_details-ftp_v1.0_d2020_c20220816.csv", 
+    col_types = cols(BEGIN_YEARMONTH = col_date(format = "%Y%m"), 
+        BEGIN_DAY = col_integer(), END_YEARMONTH = col_date(format = "%Y%m"), 
+        END_DAY = col_integer(), EPISODE_ID = col_character(), 
+        DAMAGE_PROPERTY = col_number(),
+        DAMAGE_CROPS = col_number(),
+        EVENT_ID = col_character()))
+```
+
+```{r}
+storms
+```
+
+
+```{r}
+# which storm type is the deadliest?
+storm_deaths <- storms %>% 
+  dplyr::select(EVENT_TYPE, DEATHS_DIRECT, DEATHS_INDIRECT) %>% 
+  group_by(EVENT_TYPE) %>% 
+  summarise(deaths_total = sum(DEATHS_DIRECT, DEATHS_INDIRECT)) %>% 
+  arrange(-deaths_total) %>% 
+  top_n(10)
+  
+
+storm_deaths
+  
+```
+
+```{r}
+ggplot(storm_deaths) +
+  geom_col(aes(reorder(EVENT_TYPE, -deaths_total),deaths_total)) +
+  theme(axis.text.x = element_text(angle=90, hjust = 1)) +
+  labs(title = "Deadliest Storm Types in 2020", x = "Storm Type", y = "Total Deaths")
+```
+
+Storms can cause injuries, too. Let's see what the most harmful storms are by calculating the storm types with the most injuries *and* deaths associated with them. Which storms are the most harmful?
+
+How is this plot similar or different to the one you created first? What conclusions can you draw from these two plots? How might this plot be misleading?
+
+
+
+```{r}
+# include injuries
+storm_deaths_injuries <- storms %>% 
+  dplyr::select(EVENT_TYPE, DEATHS_DIRECT, DEATHS_INDIRECT, INJURIES_DIRECT, INJURIES_INDIRECT) %>% 
+  group_by(EVENT_TYPE) %>% 
+  summarise(deaths_injuries_total = sum(DEATHS_DIRECT, DEATHS_INDIRECT, INJURIES_DIRECT, INJURIES_INDIRECT)) %>% 
+  arrange(-deaths_injuries_total) %>% 
+  top_n(10)
+  
+
+storm_deaths_injuries
+```
+
+```{r}
+ggplot(storm_deaths_injuries) +
+  geom_col(aes(reorder(EVENT_TYPE, -deaths_injuries_total),deaths_injuries_total)) +
+  theme(axis.text.x = element_text(angle=90, hjust = 1)) +
+  labs(title = "Most Harmful Storm Types in 2020", x = "Storm Type", y = "Total Deaths and Injuries")
+```
+
+Each year, NOAA publishes a Billion-Dollar Disasters report, which details the numbers and locations of natural disasters in the US with damage and costs exceeding $1 billion. You can read more about the Billion-Dollar Disasters here: https://www.ncei.noaa.gov/access/billions/
+
+Our Storm Events dataset has the damage costs in thousands of dollars associated with each storm event. Which event types are the costliest (note there are two columns for damage costs)?
+
+How could this graphic be misleading? Are there other costs associated with storms besides property and crop damage? What could you conclude based on all three of the graphics you have created?
+
+```{r}
+# Costliest storms by type
+
+costly_storms <- storms %>% 
+  group_by(EVENT_TYPE) %>% 
+  summarise(damage = sum(DAMAGE_PROPERTY, DAMAGE_CROPS)) %>% 
+  arrange(-damage) %>% 
+  top_n(5)
+
+costly_storms
+```
+
+```{r}
+ggplot(costly_storms) +
+  geom_col(aes(reorder(EVENT_TYPE, -damage), damage)) +
+  labs(title = "Costliest Storm Types in 2020", x = "Storm Type", y = "Total Damage Cost (thousands of dollars)")
+```
+
+#### Your Turn
+
+What else could you visualize with this dataset? Plot a new relationship below and give an explanation for what this visualization says about the data.
+
+
+
+### Extra
+If you have been in Nashville for a while, you might remember the March 2020 tornado that caused a lot of damage in the Nashville area. Can you find this storm in the dataset? What other information can you find about this event from the data?
