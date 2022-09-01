@@ -1,0 +1,92 @@
+---
+title: "Working with NETCDF files"
+author: Student Name
+date: Due Date
+output: github_document
+editor_options:
+  chunk_output_type: inline
+---
+
+## DSI-EDA
+## Professor Cassy Dorff
+
+```{r}
+# Libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(httr)
+library(jsonlite)
+library(factoextra)
+```
+
+```{r}
+# Get data from NOAA Hazards Database API
+URL <- "https://www.ngdc.noaa.gov/hazel/hazard-service/api/v1/tsunamis/events?minYear=2000"
+api_response <- GET(URL)
+
+api_response
+```
+
+
+```{r}
+# Convert API response to JSON
+json_data <- rawToChar(api_response$content)
+
+data <- fromJSON(json_data)
+names(data$items)
+```
+
+```{r}
+df <- as.data.frame(data$items)
+
+df
+names(df)
+```
+
+Suggestions for use:
+use variables to predict ts intensity
+
+```{r}
+# try out PCA
+# get rid of non-numeric columns
+df_numeric <- df %>% 
+  mutate(hasVolcano = -1 *(is.na(volcanoEventId))+1) %>% 
+  dplyr::select(id, tsIntensity, eqMagnitude, numDeposits, numRunups, damageAmountOrder, damageAmountOrderTotal, housesDestroyedAmountOrderTotal, month, deathsAmountOrder, deathsAmountOrderTotal, deaths, housesDestroyedAmountOrder, deathsTotal, maxWaterHeight, housesDestroyed, housesDestroyedTotal, eqDepth, injuries, injuriesAmountOrder, injuriesTotal, injuriesAmountOrderTotal, housesDamagedAmountOrderTotal, damageMillionsDollarsTotal, housesDamagedTotal:tsMtAbe, hasVolcano) %>% 
+  replace(is.na(.), 0)
+  
+
+df_numeric
+```
+
+```{r}
+df_pca <- prcomp(df_numeric, center = TRUE, scale = TRUE)
+
+# view the results 
+summary(df_pca)
+```
+
+```{r}
+# calculate the variance explained by squaring the standard deviation
+VE <-df_pca$sdev^2
+
+# Divide each Variance Explained by the Total Variance Explained 
+PVE <- VE / sum(VE)
+# round our results
+pca_res <- round(PVE, 2)
+pca_res
+```
+
+```{r}
+# Elbow Plot
+ggplot() +
+  geom_point(aes(c(1:length(pca_res)), pca_res))
+```
+
+```{r}
+fviz_pca_biplot(pca_res, repel = TRUE,
+                col.var = "#2E9FDF", # Variables color
+                col.ind = "#696969"  # Individuals color
+                )
+```
+
