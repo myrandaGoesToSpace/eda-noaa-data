@@ -1,6 +1,8 @@
 ---
 title: "Mapping Sea Surface Temperature Anomalies"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 # Mapping Sea Surface Temperature using NOAA Data
@@ -14,7 +16,7 @@ library(raster)
 ## The Data
 
 ### How is environmental data organized?
-Earth scientists such as geographers and oceanographers use a special data format specifically designed for Earth science data known as NetCDF (____). NetCDF is specially suited for spatial data about the Earth because it organizes data points into **layers**. Each layer represents one time step, and contains the longitude, latitude, and data points for one moment in time. Scientists can examine how the data changes over time by navigating between these layers. The R library **ncdf4** allows us to use and manipulate NetCDF files progammatically.
+Earth scientists such as geographers and oceanographers use a special data format specifically designed for Earth science data known as NetCDF (Network Common Data Form). NetCDF is specially suited for spatial data about the Earth because it organizes data points into **layers**. Each layer represents one time step, and contains the longitude, latitude, and data points for one moment in time. Scientists can examine how the data changes over time by navigating between these layers. The R library **ncdf4** allows us to use and manipulate NetCDF files progammatically.
 
 ### How can I access environmental data?
 
@@ -46,10 +48,11 @@ lat <- ncvar_get(data, "lat")
 lat <- rev(lat)
 
 ```
+
 After you are done accessing your variables, it is good practice to close the server connection with **nc_close()**
 
 ```{r}
-nc_close(sst_mean)
+nc_close(data)
 ```
 
 Now that we have all the variables we need, let's get to plotting!
@@ -59,7 +62,7 @@ Now that we have all the variables we need, let's get to plotting!
 To plot our NetCDF data, we first need to convert it to a **raster**. A raster is a spatial grid where each cell represents a pixel on an image. This can be accomplished by calling the raster function and supplying the variable we want to plot (sst_mean), as well as the range of the coordinate values (x-axis for longitude, and y-axis for latitude). Once it is "rasterized," we can simply plot it in R using the base plot function.
 
 ```{r}
-r <- raster(t(sst), xmn = min(lon), xmx = max(lon), ymn = min(lat), ymx = max(lat))
+r <- raster(t(sst_mean), xmn = min(lon), xmx = max(lon), ymn = min(lat), ymx = max(lat))
 
 plot(r, col=topo.colors(100))
 ```
@@ -112,17 +115,11 @@ This gives us an idea for how the sea surface temperature in 1982 differed from 
 
 ```{r}
 # Get variables from SST data
-ssta_max <- ncvar_get(ssta_last, "SSTA_Maximum")
-ssta_mean <- ncvar_get(ssta_last, "SSTA_Mean")
 ssta <- ncvar_get(ssta_last, "SSTA")
 lon <- ncvar_get(ssta_last, "lon")
 lat <- ncvar_get(ssta_last, "lat")
 lat <- rev(lat)
-time <- ncvar_get(ssta_last, "time")
 
-start_date <- as.POSIXct('1981-12-31 00:00:00')
-time_date <- start_date + days(time)
-year(max(time_date))
 nc_close(ssta_last)
 ```
 
@@ -144,13 +141,13 @@ What do you notice about the graphs we have made? How does SSTA for 1982 differ 
 
 ## Where to go from here
 
-Great job creating those plots! I hope you have a better understanding of how scientists store environmental data as well as how to access and explore that data. NOAA's THREDDS server has many more datasets to explore. Find another dataset or variable you're interested in, and explore that as well (one interested one is CoRTAD Thermal Stress Anomaly, which you can query at https://www.ncei.noaa.gov/thredds-ocean/dodsC/cortad/Version6/cortadv6_TSA.nc?lat[0:1:4319],lon[0:1:8639],TSA[2085:1:2085][0:1:4319][0:1:8639]" . Another great dataset to accompany your SST metrics study would be a set of coordinates for major coral reef locations.
+Great job creating those plots! I hope you have a better understanding of how scientists store environmental data as well as how to access and explore that data. NOAA's THREDDS server has many more datasets to explore. Find another dataset or variable you're interested in, and explore that as well (one interesting one is [CoRTAD Thermal Stress Anomaly](https://www.ncei.noaa.gov/thredds-ocean/dodsC/cortad/Version6/cortadv6_TSA.nc.html). Another great dataset to accompany your SST metrics study would be a set of coordinates for major coral reef locations (see bonus section).
 
 Although we have created some great maps, we could definitely improve on these. Try adding a nice title and legend to your map, or changing the color scales for SSTA values. If you wanted, you could even try to overlay a world map onto your plot.
 
 ## Other NOAA Data
 
-NOAA has petabytes of data available to the public. To find more interesting datasets, explore the THREDDS server from a browser, check out data available via cloud providers, or check out some of NOAA's data portals.
+NOAA has petabytes of data available to the public. To find more interesting datasets, explore the [THREDDS server](https://www.ncei.noaa.gov/thredds-ocean/catalog.html) from a browser, check out data [available via cloud providers](https://www.noaa.gov/nodd/datasets), the [NOAA Data Catalog](https://data.noaa.gov/dataset/), or check out some of NOAA's many data portals such as [CoastWatch](https://coastwatch.noaa.gov/cw_html/cwViewer.html).
 
 ## Bonus: Coral Reef locations
 
@@ -159,24 +156,16 @@ NOAA's [Deep Sea Coral and Sponge Map Portal](https://www.ncei.noaa.gov/maps/dee
 ```{r}
 library(readr)
 # Access and download data at https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm
+# Download the data to your machine and change the path below
 deep_sea_corals <- read_csv("../../deep_sea_corals.csv")
 
 deep_sea_corals
 ```
 
 ```{r}
-coral_lat <- deep_sea_corals$latitude
-coral_lon <- deep_sea_corals$longitude
-```
-
-```{r}
 plot(r)
-points(coral_lon, coral_lat, cex=0.25)
+points(deep_sea_corals$longitude, deep_sea_corals$latitude, cex=0.25)
 ```
 
 Can you make an interesting plot with these datasets? Try it out below!
-
-```{r}
-
-```
 
