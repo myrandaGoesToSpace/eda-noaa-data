@@ -44,6 +44,12 @@ We also want to grab the coordinates that "FilledSSTmean" uses. From the metadat
 lon <- ncvar_get(data, "lon")
 lat <- ncvar_get(data, "lat")
 lat <- rev(lat)
+
+```
+After you are done accessing your variables, it is good practice to close the server connection with **nc_close()**
+
+```{r}
+nc_close(sst_mean)
 ```
 
 Now that we have all the variables we need, let's get to plotting!
@@ -76,9 +82,7 @@ ssta_first
 Like the SST dataset, the SSTA dataset contains many variables. Let's choose the raw SSTA. If we had included more time steps in our data request, we would need to specify the year. Since we only downloaded data for 1982, however, we don't need to specify the time. Like before, we will also grab lat and lon for our map.
 
 ```{r}
-# Get variables from SST data
-ssta_max <- ncvar_get(ssta_first, "SSTA_Maximum")
-ssta_mean <- ncvar_get(ssta_first, "SSTA_Mean")
+# Get variables from SSTA data
 ssta <- ncvar_get(ssta_first, "SSTA")
 lon <- ncvar_get(ssta_first, "lon")
 lat <- ncvar_get(ssta_first, "lat")
@@ -90,7 +94,6 @@ nc_close(ssta_first)
 Next, create a raster with the data and plot it.
 
 ```{r}
-
 r <- raster(t(ssta), xmn = min(lon), xmx = max(lon), ymn = min(lat), ymx = max(lat))
 
 plot(r)
@@ -144,3 +147,36 @@ What do you notice about the graphs we have made? How does SSTA for 1982 differ 
 Great job creating those plots! I hope you have a better understanding of how scientists store environmental data as well as how to access and explore that data. NOAA's THREDDS server has many more datasets to explore. Find another dataset or variable you're interested in, and explore that as well (one interested one is CoRTAD Thermal Stress Anomaly, which you can query at https://www.ncei.noaa.gov/thredds-ocean/dodsC/cortad/Version6/cortadv6_TSA.nc?lat[0:1:4319],lon[0:1:8639],TSA[2085:1:2085][0:1:4319][0:1:8639]" . Another great dataset to accompany your SST metrics study would be a set of coordinates for major coral reef locations.
 
 Although we have created some great maps, we could definitely improve on these. Try adding a nice title and legend to your map, or changing the color scales for SSTA values. If you wanted, you could even try to overlay a world map onto your plot.
+
+## Other NOAA Data
+
+NOAA has petabytes of data available to the public. To find more interesting datasets, explore the THREDDS server from a browser, check out data available via cloud providers, or check out some of NOAA's data portals.
+
+## Bonus: Coral Reef locations
+
+NOAA's [Deep Sea Coral and Sponge Map Portal](https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm) contains information on coral and sponge populations around the world. This could be an interesting dataset to pair with our SST data. Here is some code to get you started:
+
+```{r}
+library(readr)
+# Access and download data at https://www.ncei.noaa.gov/maps/deep-sea-corals/mapSites.htm
+deep_sea_corals <- read_csv("../../deep_sea_corals.csv")
+
+deep_sea_corals
+```
+
+```{r}
+coral_lat <- deep_sea_corals$latitude
+coral_lon <- deep_sea_corals$longitude
+```
+
+```{r}
+plot(r)
+points(coral_lon, coral_lat, cex=0.25)
+```
+
+Can you make an interesting plot with these datasets? Try it out below!
+
+```{r}
+
+```
+
