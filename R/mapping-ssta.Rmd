@@ -8,8 +8,6 @@ output: html_notebook
 ## Libraries
 ```{r}
 library(ncdf4)
-#library(dplyr)
-library(lubridate)
 library(raster)
 ```
 
@@ -62,41 +60,20 @@ plot(r, col=topo.colors(100))
 
 What a nice map! Notice that we didn't import any map images to overlay on the data. Since our dataset contains sea surface temperature around the globe, we can see landmasses due to their lack of data values.
 
-```{r}
-# thermal stress anomaly
-url <- "https://www.ncei.noaa.gov/thredds-ocean/dodsC/cortad/Version6/cortadv6_TSA.nc?lat[0:1:4319],lon[0:1:8639],TSA[2085:1:2085][0:1:4319][0:1:8639]"
-tsa_data <- nc_open(url)
-tsa_data
-```
+Sea surface temperature is a good metric for visualizing the temperature of our oceans. However, SST is a raw measurement that doesn't account for seasonal changes. In the northern hemisphere, we have hotter temperatures in June-August and cooler temperatures in December-February. These natural fluctuations in temperature (called the climatology) make it difficult to visualize how the climate is changing. To solve this problem, scientists calculate a metric known as the Sea Surface Temperature Anomaly. This measurement takes the sea surface temperature at a point in time and compares it to the average temperature at that location for a climatological period (typicallly 30 years). CoRTAD's Sea Surface Temperature Anomaly dataset lets us explore this metric ourselves. 
 
-Plot thermal stress anomaly
-
-```{r}
-tsa <- ncvar_get(tsa_data, "TSA")
-tsa_lon <- ncvar_get(tsa_data, "lon")
-tsa_lat <- ncvar_get(tsa_data, "lat")
-
-nc_close(tsa_data)
-```
-
-
-```{r}
-r_tsa <- raster(t(tsa), xmn = min(lon), xmx = max(lon), ymn = min(lat), ymx = max(lat))
-
-plot(r_tsa)
-plot(r_tsa > 0)
-```
-
+Because this dataset is so large, we will not download the full dataset. For this notebook, we will compare information from the first year of the data (1982) to the last year of the data (2019).
 
 ```{r}
 ssta_first_url <- "https://www.ncei.noaa.gov/thredds-ocean/dodsC/cortad/Version6/cortadv6_SSTA.nc?time[0:1:0],lat[0:1:4319],lon[0:1:8639],SSTA[0:1:0][0:1:4319][0:1:8639],SSTA_Minimum[0:1:4319][0:1:8639],SSTA_Maximum[0:1:4319][0:1:8639],SSTA_Mean[0:1:4319][0:1:8639],SSTA_Frequency[0:1:0][0:1:4319][0:1:8639]"
 ssta_last_url <- "https://www.ncei.noaa.gov/thredds-ocean/dodsC/cortad/Version6/cortadv6_SSTA.nc?time[2085:1:2085],lat[0:1:4319],lon[0:1:8639],SSTA[2085:1:2085][0:1:4319][0:1:8639],SSTA_Minimum[0:1:4319][0:1:8639],SSTA_Maximum[0:1:4319][0:1:8639],SSTA_Mean[0:1:4319][0:1:8639],SSTA_Frequency[2085:1:2085][0:1:4319][0:1:8639]"
 ssta_first <- nc_open(ssta_first_url)
 ssta_last <- nc_open(ssta_last_url)
-
+ssta_first
 ```
 
 
+Like the SST dataset, the SSTA dataset contains many variables. Let's choose the raw SSTA. If we had included more time steps in our data request, we would need to specify the year. Since we only downloaded data for 1982, however, we don't need to specify the time. Like before, we will also grab lat and lon for our map.
 
 ```{r}
 # Get variables from SST data
@@ -106,13 +83,11 @@ ssta <- ncvar_get(ssta_first, "SSTA")
 lon <- ncvar_get(ssta_first, "lon")
 lat <- ncvar_get(ssta_first, "lat")
 lat <- rev(lat)
-time <- ncvar_get(ssta_first, "time")
 
-start_date <- as.POSIXct('1981-12-31 00:00:00')
-time_date <- start_date + days(time)
-year(max(time_date))
 nc_close(ssta_first)
 ```
+
+Next, create a raster with the data and plot it.
 
 ```{r}
 
@@ -120,11 +95,17 @@ r <- raster(t(ssta), xmn = min(lon), xmx = max(lon), ymn = min(lat), ymx = max(l
 
 plot(r)
 
+```
+
+The colors in this map represent the difference in sea surface temperature at a location to its climatological mean. Because we have so many data points across the world, it is a bit hard to see where the SSTA is above average (0). Let's plot only the points where SSTA > 0.
+
+```{r}
 plot(r > 0)
 
 print(length(which(ssta > 0)))
 ```
 
+This gives us an idea for how the sea surface temperature in 1982 differed from the climate normal. Next, let's investigate SSTA for 2019.
 
 ```{r}
 # Get variables from SST data
@@ -145,57 +126,21 @@ nc_close(ssta_last)
 
 ```{r}
 r <- raster(t(ssta), xmn = min(lon), xmx = max(lon), ymn = min(lat), ymx = max(lat))
-# try out color palettes?
-pal <- colorRampPalette(c("white", "red", "yellow", "green"))
-color <- pal(25)
 
 plot(r) 
+
+```
+
+```{r}
 plot(r > 0)
 
 print(length(which(ssta > 0)))
 ```
 
-```{r}
-# plot anomalies from different years
-last_date_index <- length(time_date)
-time_date[length(time_date)]
+What do you notice about the graphs we have made? How does SSTA for 1982 differ from SSTA for 2019?
 
-latest_measurement <- time[last_date_index]
+## Where to go from here
 
-earliest_measurement <- time[1]
-```
+Great job creating those plots! I hope you have a better understanding of how scientists store environmental data as well as how to access and explore that data. NOAA's THREDDS server has many more datasets to explore. Find another dataset or variable you're interested in, and explore that as well (one interested one is CoRTAD Thermal Stress Anomaly, which you can query at https://www.ncei.noaa.gov/thredds-ocean/dodsC/cortad/Version6/cortadv6_TSA.nc?lat[0:1:4319],lon[0:1:8639],TSA[2085:1:2085][0:1:4319][0:1:8639]" . Another great dataset to accompany your SST metrics study would be a set of coordinates for major coral reef locations.
 
-```{r}
-
-```
-
-
-```{r}
-ice_conc <- ncvar_get(amsr_data, "IceConc")
-lon <- ncvar_get(amsr_data, "longitude")
-lat <- ncvar_get(amsr_data, "latitude")
-lat <- rev(lat)
-time <- ncvar_get(amsr_data, "time")
-nc_close(amsr_data)
-```
-
-
-
-```{r}
-# Messing with ggplot
-library(ggplot2)
-library(tidyverse)
-
-world <- map_data("world")
-```
-
-```{r}
-df_tsa <- as.data.frame(r_tsa, xy=TRUE)
-ggplot() +
-
-  geom_raster(
-    data = df_tsa,
-    aes(x, y, color = layer)
-  )
-```
-
+Although we have created some great maps, we could definitely improve on these. Try adding a nice title and legend to your map, or changing the color scales for SSTA values. If you wanted, you could even try to overlay a world map onto your plot.
