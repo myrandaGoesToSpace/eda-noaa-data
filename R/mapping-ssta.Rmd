@@ -122,9 +122,15 @@ Like the SST dataset, the SSTA dataset contains many variables. Let's choose the
 
 ```{r}
 # Get variables from SSTA data
+
+# Get the variable called "SSTA"
 ssta <- ncvar_get(ssta_first, "SSTA")
+
+# Get latitude and longitude ("lat" and "lon")
 lon <- ncvar_get(ssta_first, "lon")
 lat <- ncvar_get(ssta_first, "lat")
+
+
 lat <- rev(lat)
 
 nc_close(ssta_first)
@@ -150,10 +156,17 @@ print(length(which(ssta > 0)))
 This gives us an idea for how the sea surface temperature in 1982 differed from the climate normal. Next, let's investigate SSTA for 2019.
 
 ```{r}
-# Get variables from SST data
-ssta <- ncvar_get(ssta_last, "SSTA")
-lon <- ncvar_get(ssta_last, "lon")
-lat <- ncvar_get(ssta_last, "lat")
+
+## FILL IN CODE BELOW ##
+# Get the variable called "SSTA"
+ssta <- ncvar_get()
+
+# Get latitude and longitude ("lat" and "lon")
+lon <- ncvar_get()
+lat <- ncvar_get()
+
+## END OF YOUR CODE ##
+
 lat <- rev(lat)
 
 nc_close(ssta_last)
