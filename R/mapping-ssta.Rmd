@@ -66,9 +66,9 @@ sst_latest <- var.get.nc(sst_nc, "sst", start = c(1, 1, latest), count = c(1440,
 Let's take a look at the variable we just grabbed (sst_latest). What are the dimensions of this variable? (5min explore)
 
 ```{r}
-# Find the dimensions of sst_latest
+# Find the dimensions of sst_latest (HINT: use the dim() function)
 # YOUR CODE HERE #
-dim(sst_latest)
+
 
 ```
 
@@ -113,9 +113,9 @@ to_raster <- function(mat) {
 
 r <- to_raster(sst_latest)
 
-# use R's plot function to plot the raster we just created (Code together)
+# use base R's plot function to plot the raster we just created (Code together)
 # YOUR CODE HERE #
-plot(r)
+
 ```
 
 If you want to customize your map, you can change the color mapping R uses for each pixel value using the **col** argument in plot(). Try adding the argument **col = topo.colors(100)** to your plot function call. (10min explore)
@@ -123,7 +123,7 @@ If you want to customize your map, you can change the color mapping R uses for e
 ```{r}
 # plot the raster again, this time adding the argument for colors
 ## YOUR CODE HERE ##
-plot(r, col = topo.colors(100))
+
 
 ```
 
@@ -131,7 +131,7 @@ Try playing around with topo.colors and see what changing the number inside the 
 
 ```{r}
 ## YOUR CODE HERE ##
-plot(r, col = topo.colors(10))
+
 
 ```
 
@@ -196,8 +196,8 @@ This gives us an idea for how the sea surface temperature in 1982 differed from 
 
 ```{r}
 ## FILL IN CODE BELOW ## (code together)
-plot(clamp(ssta_last, -5, 5), zlim = c(-5, 5), col = ssta_cols,
-     main = paste("SST anomaly (°C):", date_last))
+plot(clamp(#EDIT HERE, -5, 5), zlim = c(-5, 5), col = ssta_cols,
+     main = paste("SST anomaly (°C):", #EDIT HERE))
 ## END OF YOUR CODE ##
 ```
 
